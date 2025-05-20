@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spend Billionaire Money</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            padding-bottom: 100px;
+        }
+        .money-counter {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background-color: #1a73e8;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .item-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .item-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .buy-btn, .sell-btn {
+            transition: all 0.2s ease;
+        }
+        .buy-btn:hover:not(:disabled) {
+            background-color: #48bb78;
+        }
+        .sell-btn:hover:not(:disabled) {
+            background-color: #f56565;
+        }
+        .buy-btn:disabled, .sell-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .quantity-control {
+            display: none;
+        }
+        .progress-bar {
+            height: 6px;
+            background-color: #edf2f7;
+            margin-top: 2px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background-color: #48bb78;
+            width: 100%;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <header class="text-center py-10 bg-white shadow-md">
+        <h1 class="text-4xl font-bold text-gray-800">Spend Billionaire Money</h1>
+        <p class="text-gray-600 mt-2">Ever wondered what you could buy with $100 billion?</p>
+    </header>
+
+    <!-- Money Counter -->
+    <div class="money-counter py-4 text-center">
+        <h2 class="text-2xl font-semibold">Remaining Money:</h2>
+        <div class="text-5xl font-bold my-2" id="money-display">$100,000,000,000</div>
+        <div class="mx-auto w-3/4 max-w-4xl">
+            <div class="progress-bar">
+                <div class="progress" id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spending Stats -->
+    <div class="bg-white shadow-md rounded-lg mx-auto my-6 p-4 max-w-4xl">
+        <h3 class="text-xl font-semibold text-center mb-4">Your Spending Stats</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-center">
+            <div class="bg-gray-100 p-3 rounded">
+                <p class="text-gray-600">Total Spent</p>
+                <p class="text-xl font-bold text-blue-600" id="total-spent">$0</p>
+            </div>
+            <div class="bg-gray-100 p-3 rounded">
+                <p class="text-gray-600">Items Purchased</p>
+                <p class="text-xl font-bold text-purple-600" id="items-count">0</p>
+            </div>
+            <div class="bg-gray-100 p-3 rounded">
+                <p class="text-gray-600">Percent Spent</p>
+                <p class="text-xl font-bold text-green-600" id="percent-spent">0%</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Grid -->
+    <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="items-container">
+            <!-- Items will be generated here by JavaScript -->
+        </div>
+    </div>
+
+    <script>
+        // Initial money amount (100 billion dollars)
+        const INITIAL_MONEY = 100000000000;
+        let currentMoney = INITIAL_MONEY;
+
+        // Item data with images, names, and prices
+        const items = [
+            { id: 1, name: "Big Mac", price: 2, image: "https://neal.fun/spend/images/big-mac.jpg", quantity: 0 },
+            { id: 2, name: "Flip Flops", price: 3, image: "https://neal.fun/spend/images/flip-flops.jpg", quantity: 0 },
+            { id: 3, name: "Coca-Cola Pack", price: 5, image: "https://neal.fun/spend/images/coca-cola-pack.jpg", quantity: 0 },
+            { id: 4, name: "Movie Ticket", price: 12, image: "https://neal.fun/spend/images/movie-ticket.jpg", quantity: 0 },
+            { id: 5, name: "Book", price: 15, image: "https://neal.fun/spend/images/book.jpg", quantity: 0 },
+            { id: 6, name: "Lobster Dinner", price: 45, image: "https://neal.fun/spend/images/lobster-dinner.jpg", quantity: 0 },
+            { id: 7, name: "Video Game", price: 60, image: "https://neal.fun/spend/images/video-game.jpg", quantity: 0 },
+            { id: 8, name: "Amazon Echo", price: 99, image: "https://neal.fun/spend/images/amazon-echo.jpg", quantity: 0 },
+            { id: 9, name: "Year of Netflix", price: 100, image: "https://neal.fun/spend/images/year-of-netflix.jpg", quantity: 0 },
+            { id: 10, name: "Air Jordans", price: 125, image: "https://neal.fun/spend/images/air-jordans.jpg", quantity: 0 },
+            { id: 11, name: "Airpods", price: 199, image: "https://neal.fun/spend/images/airpods.jpg", quantity: 0 },
+            { id: 12, name: "Gaming Console", price: 299, image: "https://neal.fun/spend/images/gaming-console.jpg", quantity: 0 },
+            { id: 13, name: "Drone", price: 350, image: "https://neal.fun/spend/images/drone.jpg", quantity: 0 },
+            { id: 14, name: "Smartphone", price: 699, image: "https://neal.fun/spend/images/smartphone.jpg", quantity: 0 },
+            { id: 15, name: "Bike", price: 800, image: "https://neal.fun/spend/images/bike.jpg", quantity: 0 },
+            { id: 16, name: "Kitten", price: 1500, image: "https://neal.fun/spend/images/kitten.jpg", quantity: 0 },
+            { id: 17, name: "Puppy", price: 1500, image: "https://neal.fun/spend/images/puppy.jpg", quantity: 0 },
+            { id: 18, name: "Auto Rickshaw", price: 2300, image: "https://neal.fun/spend/images/auto-rickshaw.jpg", quantity: 0 },
+            { id: 19, name: "Horse", price: 2500, image: "https://neal.fun/spend/images/horse.jpg", quantity: 0 },
+            { id: 20, name: "Acre of Farmland", price: 3000, image: "https://neal.fun/spend/images/acre-of-farmland.jpg", quantity: 0 },
+            { id: 21, name: "Designer Handbag", price: 5500, image: "https://neal.fun/spend/images/designer-handbag.jpg", quantity: 0 },
+            { id: 22, name: "Hot Tub", price: 6000, image: "https://neal.fun/spend/images/hot-tub.jpg", quantity: 0 },
+            { id: 23, name: "Luxury Wine", price: 7000, image: "https://neal.fun/spend/images/luxury-wine.jpg", quantity: 0 },
+            { id: 24, name: "Diamond Ring", price: 10000, image: "https://neal.fun/spend/images/diamond-ring.jpg", quantity: 0 },
+            { id: 25, name: "Jet Ski", price: 12000, image: "https://neal.fun/spend/images/jet-ski.jpg", quantity: 0 },
+            { id: 26, name: "Rolex", price: 15000, image: "https://neal.fun/spend/images/rolex.jpg", quantity: 0 },
+            { id: 27, name: "Ford F-150", price: 30000, image: "https://neal.fun/spend/images/ford-f-150.jpg", quantity: 0 },
+            { id: 28, name: "Tesla", price: 75000, image: "https://neal.fun/spend/images/tesla.jpg", quantity: 0 },
+            { id: 29, name: "Monster Truck", price: 150000, image: "https://neal.fun/spend/images/monster-truck.jpg", quantity: 0 },
+            { id: 30, name: "Ferrari", price: 250000, image: "https://neal.fun/spend/images/ferrari.jpg", quantity: 0 },
+            { id: 31, name: "Single Family Home", price: 300000, image: "https://neal.fun/spend/images/single-family-home.jpg", quantity: 0 },
+            { id: 32, name: "Gold Bar", price: 700000, image: "https://neal.fun/spend/images/gold-bar.jpg", quantity: 0 },
+            { id: 33, name: "McDonalds Franchise", price: 1500000, image: "https://neal.fun/spend/images/mcdonalds-franchise.jpg", quantity: 0 },
+            { id: 34, name: "Superbowl Ad", price: 5250000, image: "https://neal.fun/spend/images/superbowl-ad.jpg", quantity: 0 },
+            { id: 35, name: "Yacht", price: 7500000, image: "https://neal.fun/spend/images/yacht.jpg", quantity: 0 },
+            { id: 36, name: "M1 Abrams", price: 8000000, image: "https://neal.fun/spend/images/m1-abrams.jpg", quantity: 0 },
+            { id: 37, name: "Formula 1 Car", price: 15000000, image: "https://neal.fun/spend/images/formula-1-car.jpg", quantity: 0 },
+            { id: 38, name: "Apache Helicopter", price: 31000000, image: "https://neal.fun/spend/images/apache-helicopter.jpg", quantity: 0 },
+            { id: 39, name: "Mansion", price: 45000000, image: "https://neal.fun/spend/images/mansion.jpg", quantity: 0 },
+            { id: 40, name: "Make a Movie", price: 100000000, image: "https://neal.fun/spend/images/make-a-movie.jpg", quantity: 0 },
+            { id: 41, name: "Boeing 747", price: 148000000, image: "https://neal.fun/spend/images/boeing-747.jpg", quantity: 0 },
+            { id: 42, name: "Mona Lisa", price: 780000000, image: "https://neal.fun/spend/images/mona-lisa.jpg", quantity: 0 },
+            { id: 43, name: "Skyscraper", price: 850000000, image: "https://neal.fun/spend/images/skyscraper.jpg", quantity: 0 },
+            { id: 44, name: "Cruise Ship", price: 930000000, image: "https://neal.fun/spend/images/cruise-ship.jpg", quantity: 0 },
+            { id: 45, name: "NBA Team", price: 2120000000, image: "https://neal.fun/spend/images/nba-team.jpg", quantity: 0 }
+        ];
+
+        // Format numbers as currency
+        function formatMoney(number) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                maximumFractionDigits: 0
+            }).format(number);
+        }
+
+        // Update the money display and progress bar
+        function updateMoneyDisplay() {
+            document.getElementById('money-display').textContent = formatMoney(currentMoney);
+            
+            // Update progress bar
+            const percentSpent = ((INITIAL_MONEY - currentMoney) / INITIAL_MONEY) * 100;
+            document.getElementById('progress-bar').style.width = percentSpent + '%';
+            
+            // Update stats
+            document.getElementById('total-spent').textContent = formatMoney(INITIAL_MONEY - currentMoney);
+            
+            let totalItems = 0;
+            items.forEach(item => totalItems += item.quantity);
+            document.getElementById('items-count').textContent = totalItems;
+            
+            document.getElementById('percent-spent').textContent = percentSpent.toFixed(6) + '%';
+        }
+
+        // Buy an item
+        function buyItem(id) {
+            const item = items.find(item => item.id === id);
+            if (currentMoney >= item.price) {
+                currentMoney -= item.price;
+                item.quantity++;
+                updateItemDisplay(item);
+                updateMoneyDisplay();
+            }
+        }
+
+        // Sell an item
+        function sellItem(id) {
+            const item = items.find(item => item.id === id);
+            if (item.quantity > 0) {
+                currentMoney += item.price;
+                item.quantity--;
+                updateItemDisplay(item);
+                updateMoneyDisplay();
+            }
+        }
+
+        // Update the display for a specific item
+        function updateItemDisplay(item) {
+            const buyBtn = document.getElementById(`buy-${item.id}`);
+            const sellBtn = document.getElementById(`sell-${item.id}`);
+            const quantityControl = document.getElementById(`quantity-control-${item.id}`);
+            const quantityDisplay = document.getElementById(`quantity-${item.id}`);
+            
+            // Update quantity display
+            quantityDisplay.textContent = item.quantity;
+            
+            // Show/hide quantity control
+            if (item.quantity > 0) {
+                quantityControl.style.display = 'flex';
+            } else {
+                quantityControl.style.display = 'none';
+            }
+            
+            // Enable/disable buttons based on current money
+            buyBtn.disabled = currentMoney < item.price;
+            sellBtn.disabled = item.quantity <= 0;
+        }
+
+        // Generate all item cards
+        function generateItemCards() {
+            const container = document.getElementById('items-container');
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card bg-white rounded-lg shadow-md overflow-hidden';
+                
+                card.innerHTML = `
+                    <div class="p-4">
+                        <img src="${item.image}" alt="${item.name}" class="w-full h-48 object-contain mb-4">
+                        <h3 class="text-xl font-semibold text-center">${item.name}</h3>
+                        <p class="text-lg text-center text-blue-600 font-bold mb-4">${formatMoney(item.price)}</p>
+                        
+                        <div class="flex justify-between mt-2">
+                            <button id="buy-${item.id}" 
+                                class="buy-btn bg-green-500 text-white px-4 py-2 rounded-lg flex-1 mr-2">
+                                Buy
+                            </button>
+                            
+                            <div id="quantity-control-${item.id}" class="quantity-control flex items-center justify-center flex-1">
+                                <button id="sell-${item.id}" 
+                                    class="sell-btn bg-red-500 text-white px-3 py-2 rounded-lg">
+                                    Sell
+                                </button>
+                                <span id="quantity-${item.id}" class="mx-2 text-lg font-bold">0</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            // Add event listeners to all buttons
+            items.forEach(item => {
+                document.getElementById(`buy-${item.id}`).addEventListener('click', () => buyItem(item.id));
+                document.getElementById(`sell-${item.id}`).addEventListener('click', () => sellItem(item.id));
+                updateItemDisplay(item);
+            });
+        }
+
+        // Initialize the app
+        window.onload = function() {
+            generateItemCards();
+            updateMoneyDisplay();
+        };
+    </script>
+
+    <footer class="text-center py-6 text-gray-600 bg-white mt-10">
+        <p>Inspired by <a href="https://neal.fun/spend/" class="text-blue-600 hover:underline">Neal.fun's Spend</a> interactive game</p>
+        <p class="text-sm mt-2">This is a simulation to help visualize extreme wealth. All prices are approximate.</p>
+    </footer>
+</body>
+</html>
